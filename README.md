@@ -117,4 +117,4 @@ See [docs/Spec.md](docs/Spec.md) for the full technical specification.
 
 ## License
 
-MIT
+AGPL-3.0 — due to bundled YOLOv8n model (Ultralytics AGPL). See [LICENSE](LICENSE) for details.

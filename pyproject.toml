@@ -7,7 +7,7 @@ name = "clayarg"
 version = "0.3.0"
 description = "Full-local macOS photogrammetry pipeline"
 requires-python = ">=3.12"
-license = "MIT"
+license = "AGPL-3.0-or-later"
 dependencies = [
     "numpy>=1.26",
     "Pillow>=10.0",
