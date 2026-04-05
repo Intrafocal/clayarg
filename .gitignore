@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+
+# Swift
+.build/
+DerivedData/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Project outputs
+output/
+*.usdz
+*.obj
+processing_report.json
+preview.mjpeg
+
+# Environment
+.env
+
+# Website
+web/
