@@ -1,4 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="4" fill="#161b22"/>
-  <text x="16" y="22" text-anchor="middle" font-family="monospace" font-weight="700" font-size="16" fill="#c9d1d9">C</text>
+  <rect width="32" height="32" rx="4" fill="#0d1117"/>
+  <!-- isometric cube / 3D mesh shape -->
+  <g stroke="#58a6ff" stroke-width="1.5" fill="none" stroke-linejoin="round">
+    <!-- top face -->
+    <polygon points="16,6 26,12 16,18 6,12" fill="#161b22"/>
+    <!-- left face -->
+    <polygon points="6,12 16,18 16,27 6,21" fill="#0d1117"/>
+    <!-- right face -->
+    <polygon points="26,12 16,18 16,27 26,21" fill="#1a2030"/>
+  </g>
+  <!-- wireframe lines on faces -->
+  <g stroke="#58a6ff" stroke-width="0.5" opacity="0.4">
+    <line x1="11" y1="9" x2="11" y2="18"/>
+    <line x1="21" y1="9" x2="21" y2="18"/>
+    <line x1="6" y1="15" x2="16" y2="21"/>
+    <line x1="16" y1="21" x2="26" y2="15"/>
+  </g>
 </svg>
