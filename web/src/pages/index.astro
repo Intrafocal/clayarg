@@ -1,0 +1,756 @@
+---
+const repoUrl = "https://github.com/Intrafocal/clayarg";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>clayarg — local macOS photogrammetry</title>
+    <meta
+      name="description"
+      content="Full-local macOS photogrammetry pipeline. Photos in, Fusion 360-ready mesh out. No cloud services."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #c9d1d9;
+        --text-bright: #e6edf3;
+        --text-muted: #7d8590;
+        --accent: #58a6ff;
+        --green: #3fb950;
+        --orange: #d29922;
+        --red: #f85149;
+        --purple: #bc8cff;
+        --mono: "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", ui-monospace, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+
+      body {
+        font-family: var(--mono);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+        font-size: 14px;
+        text-align: left;
+      }
+
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      .container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
+
+      /* ---- HEADER ---- */
+      header {
+        border-bottom: 1px solid var(--border);
+        padding: 0.75rem 0;
+      }
+      header .container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .logo {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-bright);
+      }
+      .header-links {
+        display: flex;
+        gap: 1.25rem;
+        align-items: center;
+        font-size: 0.8rem;
+      }
+      .header-links a {
+        color: var(--text-muted);
+      }
+      .header-links a:hover {
+        color: var(--text);
+        text-decoration: none;
+      }
+      .gh-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+      .gh-link svg {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+      }
+
+      /* ---- HERO ---- */
+      .hero {
+        padding: 4rem 0 2.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .hero h1 {
+        font-family: var(--sans);
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-bright);
+        letter-spacing: -0.02em;
+        margin-bottom: 0.75rem;
+        line-height: 1.3;
+      }
+      .hero .tagline {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+        max-width: 540px;
+        line-height: 1.6;
+      }
+      .hero .tagline em {
+        color: var(--text);
+        font-style: normal;
+      }
+      .badges {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+      }
+      .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        color: var(--text-muted);
+      }
+      .badge-green { border-color: #238636; color: var(--green); }
+      .badge-blue { border-color: #1f6feb; color: var(--accent); }
+
+      /* ---- TERMINAL ---- */
+      .terminal {
+        background: #010409;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .terminal-bar {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 0.5rem 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .terminal-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--border);
+      }
+      .terminal-title {
+        margin-left: 0.5rem;
+        color: var(--text-muted);
+        font-size: 0.7rem;
+      }
+      .terminal-body {
+        padding: 1rem 1.25rem;
+        font-size: 0.8rem;
+        line-height: 1.7;
+        overflow-x: auto;
+      }
+      .t-prompt { color: var(--green); }
+      .t-cmd { color: var(--text-bright); }
+      .t-flag { color: var(--purple); }
+      .t-arg { color: var(--orange); }
+      .t-comment { color: var(--text-muted); }
+      .t-output { color: var(--text-muted); }
+      .t-file { color: var(--accent); }
+      .t-ok { color: var(--green); }
+      .t-dim { color: #484f58; }
+      .t-blank { display: block; height: 0.5rem; }
+
+      /* Animated terminal lines */
+      .terminal-body {
+        height: 420px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+      }
+      .terminal-body::-webkit-scrollbar { width: 6px; }
+      .terminal-body::-webkit-scrollbar-track { background: transparent; }
+      .terminal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+      .line-cmd { color: var(--text-bright); }
+      .line-prompt-char { color: var(--green); user-select: none; }
+      .line-typing { color: var(--text-bright); }
+      .line-phase { color: #58a6ff; font-weight: 600; }
+      .line-out { color: var(--text-muted); }
+      .line-warn { color: var(--orange); }
+      .line-ok { color: var(--green); }
+      .line-bar { color: #39d353; }
+      .line-file { color: var(--accent); }
+      .line-done { color: var(--green); font-weight: 600; }
+      .line-dim { color: #484f58; }
+      .line-blank { height: 0.35rem; }
+
+      .cursor {
+        color: var(--green);
+        animation: blink 0.7s step-end infinite;
+      }
+      @keyframes blink {
+        50% { opacity: 0; }
+      }
+
+      #term div {
+        transition: opacity 0.15s ease;
+        white-space: pre;
+      }
+
+      /* ---- SECTIONS ---- */
+      section {
+        padding: 2.5rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+      section:last-of-type {
+        border-bottom: none;
+      }
+      .section-title {
+        font-family: var(--sans);
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: var(--text-bright);
+        margin-bottom: 1rem;
+        letter-spacing: -0.01em;
+      }
+
+      /* ---- ABOUT (name) ---- */
+      .about p {
+        color: var(--text);
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+      }
+      .about p:last-child {
+        margin-bottom: 0;
+      }
+      .about strong {
+        color: var(--text-bright);
+      }
+
+      /* ---- PIPELINE ---- */
+      .pipeline-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      .pipeline-table td {
+        padding: 0.45rem 0;
+        vertical-align: top;
+      }
+      .pipeline-table .step-num {
+        color: var(--text-muted);
+        width: 1.5rem;
+        text-align: right;
+        padding-right: 0.75rem;
+      }
+      .pipeline-table .step-name {
+        color: var(--text-bright);
+        white-space: nowrap;
+        padding-right: 1.5rem;
+      }
+      .pipeline-table .step-desc {
+        color: var(--text-muted);
+      }
+      .pipeline-table tr {
+        border-bottom: 1px solid #21262d;
+      }
+      .pipeline-table tr:last-child {
+        border-bottom: none;
+      }
+
+      /* ---- FLAGS ---- */
+      .flags-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      .flags-table th {
+        text-align: left;
+        color: var(--text-muted);
+        font-weight: 400;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .flags-table td {
+        padding: 0.35rem 0;
+        border-bottom: 1px solid #21262d;
+      }
+      .flags-table .flag {
+        color: var(--purple);
+        white-space: nowrap;
+        padding-right: 1rem;
+      }
+      .flags-table .default {
+        color: var(--text-muted);
+        padding-right: 1rem;
+        white-space: nowrap;
+      }
+      .flags-table .desc {
+        color: var(--text);
+      }
+
+      /* ---- INSTALL ---- */
+      .install-block {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 1rem 1.25rem;
+        font-size: 0.8rem;
+        line-height: 1.8;
+        margin-bottom: 1rem;
+        overflow-x: auto;
+      }
+
+      .reqs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 1rem;
+      }
+      .req {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        border: 1px solid #21262d;
+        border-radius: 3px;
+        padding: 0.15rem 0.45rem;
+      }
+
+      /* ---- OUTPUT ---- */
+      .output-tree {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 1rem 1.25rem;
+        font-size: 0.8rem;
+        line-height: 1.7;
+      }
+      .output-tree .dir { color: var(--accent); }
+      .output-tree .file { color: var(--text); }
+      .output-tree .note { color: var(--text-muted); }
+
+      /* ---- FOOTER ---- */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 1.5rem 0;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+      footer .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      footer a { color: var(--text-muted); }
+      footer a:hover { color: var(--text); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <div class="logo">clayarg</div>
+        <div class="header-links">
+          <a href="#pipeline">Pipeline</a>
+          <a href="#install">Install</a>
+          <a href="#usage">Usage</a>
+          <a href={repoUrl} class="gh-link">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+            </svg>
+            Source
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <h1>clayarg</h1>
+          <p class="tagline">
+            Full-local macOS photogrammetry pipeline.<br />
+            Photos in, <em>Fusion 360-ready mesh</em> out.<br />
+            Coin (or, yes, a banana) for scale.<br />
+            Nothing leaves your machine.
+          </p>
+          <div class="badges">
+            <span class="badge badge-green">MIT License</span>
+            <span class="badge badge-blue">v0.3.0</span>
+            <span class="badge">macOS &middot; Apple Silicon</span>
+            <span class="badge">Python + Swift</span>
+          </div>
+
+          <div class="terminal">
+            <div class="terminal-bar">
+              <div class="terminal-dot"></div>
+              <div class="terminal-dot"></div>
+              <div class="terminal-dot"></div>
+              <span class="terminal-title">zsh &mdash; ben@MiniM1</span>
+            </div>
+            <div class="terminal-body" id="term"></div>
+          </div>
+
+          <script>
+            const lines = [
+              { text: '$ clayarg run ./ --name mymodel --scale-obj smaller --scale-ref quarter', cls: 'line-cmd', typing: true },
+              { text: 'ClayArgus v0.3.0', cls: 'line-dim' },
+              { text: 'Project: mymodel', cls: 'line-dim' },
+              { text: 'Found 24 images in \'.\'', cls: 'line-dim' },
+              { text: '', cls: 'line-blank' },
+              { text: 'Phase I: Image Quality Analysis', cls: 'line-phase' },
+              { text: '  Flagged 8 of 24 images:', cls: 'line-out' },
+              { text: '    IMG_2531.JPG: blurry (score 97.4 < 100.0)', cls: 'line-warn' },
+              { text: '    IMG_2540.JPG: blurry (score 95.4 < 100.0); duplicate of IMG_2534.JPG', cls: 'line-warn' },
+              { text: '    IMG_2519.JPG: blurry (score 85.6 < 100.0)', cls: 'line-warn' },
+              { text: '    IMG_2528.JPG: blurry (score 80.2 < 100.0); duplicate of IMG_2525.JPG', cls: 'line-warn' },
+              { text: '    IMG_2525.JPG: blurry (score 79.6 < 100.0)', cls: 'line-warn' },
+              { text: '    IMG_2522.JPG: blurry (score 73.0 < 100.0)', cls: 'line-warn' },
+              { text: '    IMG_2537.JPG: blurry (score 71.1 < 100.0); duplicate of IMG_2534.JPG', cls: 'line-warn' },
+              { text: '    IMG_2534.JPG: blurry (score 65.7 < 100.0)', cls: 'line-warn' },
+              { text: '  16 images passed quality checks (5.1s)', cls: 'line-ok' },
+              { text: '', cls: 'line-blank' },
+              { text: 'Phase II: Scale Detection (quarter)', cls: 'line-phase' },
+              { text: '  Reference: quarter (24.26mm)', cls: 'line-out' },
+              { text: '  Sampled from 11 images (confidence: high)', cls: 'line-out' },
+              { text: '  Estimated subject longest dimension: 87.0mm', cls: 'line-ok' },
+              { text: '', cls: 'line-blank' },
+              { text: 'Phase III: Subject Framing (Apple Vision)', cls: 'line-phase' },
+              { text: '  Warning: 2 images have subject near edge:', cls: 'line-out' },
+              { text: '    IMG_2524.JPG: touches left', cls: 'line-warn' },
+              { text: '    IMG_2521.JPG: touches bottom', cls: 'line-warn' },
+              { text: '  Cropped 16 images (1.4s)', cls: 'line-ok' },
+              { text: '', cls: 'line-blank' },
+              { text: 'Phase IV: Visual Preview', cls: 'line-phase' },
+              { text: '  Generated clayarg_mymodel/preview.mjpeg (16 frames, 0.3s)', cls: 'line-ok' },
+              { text: '', cls: 'line-blank' },
+              { text: 'Phase V: 3D Solve', cls: 'line-phase' },
+              { text: '  Detail: medium | Sensitivity: normal', cls: 'line-out' },
+              { text: '', cls: 'line-bar', progress: true },
+              { text: '  Done in 55.9s \u2192 clayarg_mymodel/mymodel_raw.obj', cls: 'line-ok' },
+              { text: '', cls: 'line-blank' },
+              { text: 'Phase VI: Mesh Optimization', cls: 'line-phase' },
+              { text: '  Target: 10000 faces | Format: obj', cls: 'line-out' },
+              { text: '  11612 \u2192 10000 faces', cls: 'line-out' },
+              { text: '  Scale factor: 248.9057', cls: 'line-out' },
+              { text: '  Done in 0.3s \u2192 clayarg_mymodel/mymodel_fusion.obj', cls: 'line-ok' },
+              { text: '', cls: 'line-blank' },
+              { text: 'Report: clayarg_mymodel/processing_report.json', cls: 'line-file' },
+              { text: 'Done.', cls: 'line-done' },
+            ];
+
+            const term = document.getElementById('term');
+            let lineIdx = 0;
+            let charIdx = 0;
+            let currentEl = null;
+            let loopTimeout = null;
+
+            function reset() {
+              term.innerHTML = '';
+              lineIdx = 0;
+              charIdx = 0;
+              currentEl = null;
+              tick();
+            }
+
+            function tick() {
+              if (lineIdx >= lines.length) {
+                loopTimeout = setTimeout(reset, 6000);
+                return;
+              }
+
+              const line = lines[lineIdx];
+
+              if (line.typing && charIdx === 0) {
+                currentEl = document.createElement('div');
+                currentEl.className = line.cls;
+                const prompt = document.createElement('span');
+                prompt.className = 'line-prompt-char';
+                prompt.textContent = '$ ';
+                currentEl.appendChild(prompt);
+                const textNode = document.createElement('span');
+                textNode.className = 'line-typing';
+                currentEl.appendChild(textNode);
+                const cursor = document.createElement('span');
+                cursor.className = 'cursor';
+                cursor.textContent = '\u2588';
+                currentEl.appendChild(cursor);
+                term.appendChild(currentEl);
+                charIdx = 0;
+              }
+
+              if (line.typing) {
+                const cmdText = line.text.slice(2); // skip "$ "
+                if (charIdx < cmdText.length) {
+                  currentEl.querySelector('.line-typing').textContent = cmdText.slice(0, charIdx + 1);
+                  charIdx++;
+                  term.scrollTop = term.scrollHeight;
+                  setTimeout(tick, 25 + Math.random() * 35);
+                  return;
+                } else {
+                  const cursor = currentEl.querySelector('.cursor');
+                  if (cursor) cursor.remove();
+                  lineIdx++;
+                  charIdx = 0;
+                  setTimeout(tick, 500);
+                  return;
+                }
+              }
+
+              // Animated progress bar
+              if (line.progress) {
+                const el = document.createElement('div');
+                el.className = line.cls;
+                const barWidth = 18;
+                let filled = 0;
+                el.textContent = '  [' + ' '.repeat(barWidth) + ']   0%';
+                term.appendChild(el);
+                term.scrollTop = term.scrollHeight;
+                const barInterval = setInterval(() => {
+                  filled++;
+                  const pct = Math.round((filled / barWidth) * 100);
+                  const label = filled === barWidth ? '100%  Converting to obj' : pct + '%';
+                  el.textContent = '  [' + '='.repeat(filled) + ' '.repeat(barWidth - filled) + '] ' + label;
+                  term.scrollTop = term.scrollHeight;
+                  if (filled >= barWidth) {
+                    clearInterval(barInterval);
+                    lineIdx++;
+                    setTimeout(tick, 600);
+                  }
+                }, 180);
+                return;
+              }
+
+              // Non-typing lines: appear instantly with staggered delay
+              const el = document.createElement('div');
+              el.className = line.cls;
+              if (line.text === '') {
+                el.innerHTML = '&nbsp;';
+              } else {
+                el.textContent = line.text;
+              }
+              el.style.opacity = '0';
+              term.appendChild(el);
+              requestAnimationFrame(() => { el.style.opacity = '1'; });
+              term.scrollTop = term.scrollHeight;
+
+              lineIdx++;
+              const delay = line.cls === 'line-phase' ? 960
+                : line.cls === 'line-ok' ? 600
+                : line.cls === 'line-blank' ? 360
+                : 144;
+              setTimeout(tick, delay);
+            }
+
+            // Start when terminal scrolls into view (or immediately if visible)
+            const observer = new IntersectionObserver((entries) => {
+              if (entries[0].isIntersecting) {
+                observer.disconnect();
+                setTimeout(tick, 600);
+              }
+            }, { threshold: 0.3 });
+            observer.observe(term);
+          </script>
+        </div>
+      </section>
+
+      <section class="about">
+        <div class="container">
+          <h2 class="section-title">Why "ClayArgus"?</h2>
+          <p>
+            <strong>Clay</strong> &mdash; built to scan clay models into Fusion 360. Works on anything you can photograph, but clay is where it started.
+          </p>
+          <p>
+            <strong>Argus</strong> &mdash; the many-eyed giant from Greek myth. The tool examines every photo for blur, exposure, and duplicates before solving.
+          </p>
+        </div>
+      </section>
+
+      <section id="pipeline">
+        <div class="container">
+          <h2 class="section-title">Pipeline</h2>
+          <table class="pipeline-table">
+            <tr>
+              <td class="step-num">I.</td>
+              <td class="step-name">Image Quality Analysis</td>
+              <td class="step-desc">Laplacian blur detection, exposure clipping, perceptual hash dedup</td>
+            </tr>
+            <tr>
+              <td class="step-num">II.</td>
+              <td class="step-name">Scale Detection</td>
+              <td class="step-desc">Hough circles (coins) or YOLO (banana) for real-world sizing</td>
+            </tr>
+            <tr>
+              <td class="step-num">III.</td>
+              <td class="step-name">Subject Framing</td>
+              <td class="step-desc">Apple Vision objectness saliency auto-crop</td>
+            </tr>
+            <tr>
+              <td class="step-num">IV.</td>
+              <td class="step-name">Visual Preview</td>
+              <td class="step-desc">MJPEG flythrough + confirm before solve</td>
+            </tr>
+            <tr>
+              <td class="step-num">V.</td>
+              <td class="step-name">3D Solve</td>
+              <td class="step-desc">Apple Object Capture via standalone Swift CLI (<code>clayarg-capture</code>)</td>
+            </tr>
+            <tr>
+              <td class="step-num">VI.</td>
+              <td class="step-name">Mesh Optimization</td>
+              <td class="step-desc">PyMeshLab decimation, repair, scaling &rarr; .obj / .stl / .ply</td>
+            </tr>
+          </table>
+        </div>
+      </section>
+
+      <section id="install">
+        <div class="container">
+          <h2 class="section-title">Install</h2>
+          <div class="install-block">
+            <div><span class="t-comment"># clone</span></div>
+            <div><span class="t-prompt">$ </span><span class="t-cmd">git clone <a href={repoUrl}>{repoUrl}</a></span></div>
+            <div><span class="t-prompt">$ </span><span class="t-cmd">cd clayarg</span></div>
+            <span class="t-blank"></span>
+            <div><span class="t-comment"># build the swift cli</span></div>
+            <div><span class="t-prompt">$ </span><span class="t-cmd">cd src/swift && swift build -c release && cd ../..</span></div>
+            <span class="t-blank"></span>
+            <div><span class="t-comment"># install python package</span></div>
+            <div><span class="t-prompt">$ </span><span class="t-cmd">pip install -e .</span></div>
+          </div>
+          <div class="reqs">
+            <span class="req">macOS 14+ (Sonoma)</span>
+            <span class="req">Apple Silicon (M1+)</span>
+            <span class="req">Xcode 15+ CLI tools</span>
+            <span class="req">Python 3.12+</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="usage">
+        <div class="container">
+          <h2 class="section-title">Usage</h2>
+          <div class="install-block">
+            <div><span class="t-prompt">$ </span><span class="t-cmd">clayarg run ./photos</span> <span class="t-flag">--name</span> <span class="t-arg">my-part</span></div>
+          </div>
+
+          <table class="flags-table">
+            <thead>
+              <tr>
+                <th>Flag</th>
+                <th>Default</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="flag">--name</td>
+                <td class="default">(required)</td>
+                <td class="desc">Project name, used for output filenames</td>
+              </tr>
+              <tr>
+                <td class="flag">--detail</td>
+                <td class="default">medium</td>
+                <td class="desc">preview / reduced / medium / full / raw</td>
+              </tr>
+              <tr>
+                <td class="flag">--poly-count</td>
+                <td class="default">10000</td>
+                <td class="desc">Target triangle count after decimation</td>
+              </tr>
+              <tr>
+                <td class="flag">--format</td>
+                <td class="default">obj</td>
+                <td class="desc">obj / stl / ply</td>
+              </tr>
+              <tr>
+                <td class="flag">--sensitivity</td>
+                <td class="default">normal</td>
+                <td class="desc">Feature sensitivity: normal / high</td>
+              </tr>
+              <tr>
+                <td class="flag">--scale-obj</td>
+                <td class="default">&mdash;</td>
+                <td class="desc">Which object is the reference: smaller / larger</td>
+              </tr>
+              <tr>
+                <td class="flag">--scale-ref</td>
+                <td class="default">&mdash;</td>
+                <td class="desc">quarter / euro / pound / loonie / banana</td>
+              </tr>
+              <tr>
+                <td class="flag">--scale-mm</td>
+                <td class="default">&mdash;</td>
+                <td class="desc">Define your own coin diameter in mm</td>
+              </tr>
+              <tr>
+                <td class="flag">--skip-qa</td>
+                <td class="default">off</td>
+                <td class="desc">Skip image quality analysis</td>
+              </tr>
+              <tr>
+                <td class="flag">--skip-framing</td>
+                <td class="default">off</td>
+                <td class="desc">Skip Apple Vision subject framing</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <h2 class="section-title">Output</h2>
+          <div class="output-tree">
+            <div><span class="dir">clayarg_mymodel/</span></div>
+            <div>&nbsp; <span class="file">mymodel_raw.obj</span> <span class="note">&mdash; high-fidelity capture</span></div>
+            <div>&nbsp; <span class="file">mymodel_fusion.obj</span> <span class="note">&mdash; decimated, repaired, Fusion-ready</span></div>
+            <div>&nbsp; <span class="dir">cropped/</span> <span class="note">&mdash; auto-cropped images (Phase III)</span></div>
+            <div>&nbsp; <span class="file">preview.mjpeg</span> <span class="note">&mdash; camera path flythrough</span></div>
+            <div>&nbsp; <span class="file">processing_report.json</span> <span class="note">&mdash; quality scores, scale, culling decisions</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <h2 class="section-title">Architecture</h2>
+          <p class="about" style="margin-bottom: 0.75rem;">
+            Two independently built components, loosely coupled via subprocess + JSON on stdout.
+          </p>
+          <table class="pipeline-table">
+            <tr>
+              <td class="step-name" style="color: var(--purple);">Swift CLI</td>
+              <td class="step-desc"><code>clayarg-capture</code> &mdash; standalone executable wrapping <code>PhotogrammetrySession</code>. Can be used independently.</td>
+            </tr>
+            <tr>
+              <td class="step-name" style="color: var(--green);">Python</td>
+              <td class="step-desc"><code>clayarg</code> &mdash; orchestrator. Image QA, scale detection (Hough circles + YOLOv8n via cv2.dnn), Apple Vision framing, Swift CLI subprocess, PyMeshLab mesh optimization.</td>
+            </tr>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <span>MIT &middot; <a href={repoUrl}>bendowney/clayarg</a></span>
+        <span>Contributions welcome &mdash; <a href={`${repoUrl}/issues`}>open an issue</a></span>
+      </div>
+    </footer>
+  </body>
+</html>
